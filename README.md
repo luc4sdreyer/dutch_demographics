@@ -3,6 +3,8 @@
 A reliable, comparable crime measure across Dutch municipalities, with an
 interactive choropleth to explore it.
 
+**🗺️ Live map: https://luc4sdreyer.github.io/dutch_demographics/**
+
 ## Why these offences
 
 Homicide is the usual "reliable because near-completely recorded" benchmark, but
