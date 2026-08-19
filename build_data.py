@@ -49,12 +49,14 @@ TIERS = {
                 "mostly means more enforcement. Shown as a deliberate contrast.",
     },
     "sparse": {
-        "name": "Too rare to trust annually",
-        "note": "Recorded almost completely (unlike most crime), but far too rare "
-                "for annual municipal comparison: ~2,500 cases/year nationally "
-                "(including attempts) means most municipalities see only a handful, "
-                "so a single case swings the rate. Use a multi-year average, or "
-                "read national/regional figures instead.",
+        "name": "Registered, incl. attempts — NOT the homicide rate",
+        "note": "This counts registered murder & manslaughter OFFENCES, dominated "
+                "by attempts (poging) — about 20x the number of actual homicides. "
+                "The real figure is ~125 deaths/year nationally (~0.7 per 100,000, "
+                "matching UNODC); do not read these values as the homicide rate. "
+                "And even the registered count is too sparse for annual municipal "
+                "comparison — one case swings a municipality's rate, so use a "
+                "multi-year average.",
     },
 }
 
@@ -79,7 +81,7 @@ OFFENCES = [
     ("drugshandel",                        "enforcement", "Drug trafficking"),          # 3.1.1
     ("wapenhandel",                        "enforcement", "Weapons trafficking"),       # 3.1.3
     # Too rare to trust annually (recording is excellent; volume is the problem)
-    ("moord",                              "sparse",      "Murder & manslaughter (incl. attempts)"),  # 1.4.2
+    ("moord",                              "sparse",      "Murder & manslaughter — registered, incl. attempts"),  # 1.4.2
 ]
 
 PROVISIONAL = [2024, 2025]
