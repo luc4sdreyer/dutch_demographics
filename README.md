@@ -22,11 +22,11 @@ is explicit in the UI:
 | **High** | dwelling / shed / business burglary, vehicle theft, theft-from-vehicle, bike theft | Insurance/registration-driven: high reporting, low recording bias, stable volume |
 | **Moderate** | assault, threat, vandalism | Genuine victim crime with usable volume, but reporting rates vary |
 | **Enforcement-driven** | drug offences, weapons | Track police activity, not underlying crime — shown as a deliberate contrast |
+| **Too rare to trust annually** | murder & manslaughter (incl. attempts) | Recorded almost completely, but ~2,500/year nationally means most municipalities see a handful — one case swings the rate. Included with a caveat; use multi-year averages |
 
-**Deliberately excluded:** homicide, street robbery, robbery and sexual offences
-(too rare — a municipality-year is dominated by noise; homicide is ~2,500/year
-nationally across 342 municipalities), and fraud/cybercrime (location assigned
-too fuzzily to be spatially meaningful).
+**Deliberately excluded:** street robbery, robbery and sexual offences (too rare
+*and* poorly reported), and fraud/cybercrime (location assigned too fuzzily to be
+spatially meaningful).
 
 ## Data sources (CBS OData)
 

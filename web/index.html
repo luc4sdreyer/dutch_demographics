@@ -41,6 +41,8 @@
   header { padding:14px 20px 10px; }
   header h1 { margin:0; font-size:18px; font-weight:650; }
   header p { margin:3px 0 0; font-size:12.5px; color:var(--text-secondary); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
   .layout { flex:1; display:flex; gap:16px; padding:12px 20px 18px; min-height:0; }
   .controls {
     width:260px; flex:none; display:flex; flex-direction:column; gap:16px;
@@ -98,7 +100,11 @@
 <body>
 <header>
   <h1>Dutch municipal crime map</h1>
-  <p>Registered offences by municipality — CBS police table 47018NED, population from 70072ned.
+  <p>Registered offences by municipality — CBS police table
+     <a href="https://www.cbs.nl/nl-nl/cijfers/detail/47018NED" target="_blank" rel="noopener">47018NED</a>,
+     population from
+     <a href="https://www.cbs.nl/nl-nl/cijfers/detail/70072ned" target="_blank" rel="noopener">70072ned</a>,
+     boundaries from <a href="https://cartomap.github.io/nl/" target="_blank" rel="noopener">cartomap</a>.
      Offences grouped by how reliably they compare across municipalities. <span id="yearspan"></span></p>
 </header>
 

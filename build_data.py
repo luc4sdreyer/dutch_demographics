@@ -48,12 +48,21 @@ TIERS = {
         "note": "These track police activity, not underlying crime: more offences "
                 "mostly means more enforcement. Shown as a deliberate contrast.",
     },
+    "sparse": {
+        "name": "Too rare to trust annually",
+        "note": "Recorded almost completely (unlike most crime), but far too rare "
+                "for annual municipal comparison: ~2,500 cases/year nationally "
+                "(including attempts) means most municipalities see only a handful, "
+                "so a single case swings the rate. Use a multi-year average, or "
+                "read national/regional figures instead.",
+    },
 }
 
 # Curated offences: (title substring, tier, English translation). Order controls
-# the dropdown order. Deliberately excluded: homicide, street robbery, robbery and
-# sexual offences (too rare — dominated by noise at municipal-annual level), and
-# fraud/cybercrime (location assigned too fuzzily to be spatially meaningful).
+# the dropdown order. Homicide is included in the "sparse" tier with a caveat.
+# Deliberately excluded: street robbery, robbery and sexual offences (too rare AND
+# poorly reported, so neither reliable nor meaningfully shown even with a caveat),
+# and fraud/cybercrime (location assigned too fuzzily to be spatially meaningful).
 OFFENCES = [
     # High reliability
     ("diefstal/inbraak woning",            "high",        "Residential burglary"),      # 1.1.1
@@ -69,6 +78,8 @@ OFFENCES = [
     # Enforcement-driven
     ("drugshandel",                        "enforcement", "Drug trafficking"),          # 3.1.1
     ("wapenhandel",                        "enforcement", "Weapons trafficking"),       # 3.1.3
+    # Too rare to trust annually (recording is excellent; volume is the problem)
+    ("moord",                              "sparse",      "Murder & manslaughter (incl. attempts)"),  # 1.4.2
 ]
 
 PROVISIONAL = [2024, 2025]
