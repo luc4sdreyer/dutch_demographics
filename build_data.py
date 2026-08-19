@@ -50,25 +50,25 @@ TIERS = {
     },
 }
 
-# Curated offences by title substring, tagged with tier. Order controls the
-# dropdown order. Deliberately excluded: homicide, street robbery, robbery and
+# Curated offences: (title substring, tier, English translation). Order controls
+# the dropdown order. Deliberately excluded: homicide, street robbery, robbery and
 # sexual offences (too rare — dominated by noise at municipal-annual level), and
 # fraud/cybercrime (location assigned too fuzzily to be spatially meaningful).
 OFFENCES = [
     # High reliability
-    ("diefstal/inbraak woning",            "high"),        # 1.1.1
-    ("diefstal van motorvoertuigen",       "high"),        # 1.2.2
-    ("diefstal uit/vanaf motorvoertuigen", "high"),        # 1.2.1
-    ("diefstal van brom",                  "high"),        # 1.2.3 bikes/mopeds
-    ("diefstal/inbraak box",               "high"),        # 1.1.2
-    ("diefstal/inbraak bedrijven",         "high"),        # 2.5.1
+    ("diefstal/inbraak woning",            "high",        "Residential burglary"),      # 1.1.1
+    ("diefstal van motorvoertuigen",       "high",        "Motor-vehicle theft"),       # 1.2.2
+    ("diefstal uit/vanaf motorvoertuigen", "high",        "Theft from vehicles"),       # 1.2.1
+    ("diefstal van brom",                  "high",        "Bicycle & moped theft"),     # 1.2.3
+    ("diefstal/inbraak box",               "high",        "Shed/garage burglary"),      # 1.1.2
+    ("diefstal/inbraak bedrijven",         "high",        "Business burglary"),         # 2.5.1
     # Moderate
-    ("mishandeling",                       "moderate"),    # 1.4.5 assault
-    ("bedreiging",                         "moderate"),    # 1.4.4 threat
-    ("vernieling",                         "moderate"),    # 2.2.1 vandalism
+    ("mishandeling",                       "moderate",    "Assault"),                   # 1.4.5
+    ("bedreiging",                         "moderate",    "Threat & intimidation"),     # 1.4.4
+    ("vernieling",                         "moderate",    "Vandalism & property damage"),  # 2.2.1
     # Enforcement-driven
-    ("drugshandel",                        "enforcement"),  # 3.1.1
-    ("wapenhandel",                        "enforcement"),  # 3.1.3
+    ("drugshandel",                        "enforcement", "Drug trafficking"),          # 3.1.1
+    ("wapenhandel",                        "enforcement", "Weapons trafficking"),       # 3.1.3
 ]
 
 PROVISIONAL = [2024, 2025]
@@ -89,7 +89,7 @@ def resolve_offences():
     """
     soorten = odata(DERDEN, "SoortMisdrijf")
     out = []
-    for needle, tier in OFFENCES:
+    for needle, tier, english in OFFENCES:
         hits = [s for s in soorten if needle in s["Title"].strip().lower()]
         if not hits:
             print(f"WARNING: no offence matched {needle!r}")
@@ -102,7 +102,7 @@ def resolve_offences():
         title = s["Title"].strip()
         # Title already begins with the code; strip it for a clean label.
         label = title[len(code):].strip() if title.startswith(code) else title
-        out.append((s["Key"], code, label, tier))
+        out.append((s["Key"], code, label, tier, english))
     return out
 
 
@@ -172,8 +172,8 @@ def main():
     counts = fetch_counts([soort_key for soort_key, *_ in offences], years)
 
     payload = {
-        "offences": [{"code": code, "label": label, "tier": tier}
-                     for _, code, label, tier in offences],
+        "offences": [{"code": code, "label": label, "tier": tier, "en": english}
+                     for _, code, label, tier, english in offences],
         "tiers": TIERS,
         "years": years,
         "provisional": PROVISIONAL,

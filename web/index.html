@@ -318,7 +318,7 @@ function update(){
 const offSel = document.getElementById("offence");
 offSel.innerHTML = Object.entries(data.tiers).map(([key,t])=>{
   const opts = data.offences.filter(o=>o.tier===key)
-    .map(o=>`<option value="${o.code}">${o.label}</option>`).join("");
+    .map(o=>`<option value="${o.code}">${o.label} — ${o.en}</option>`).join("");
   return opts ? `<optgroup label="${t.name}">${opts}</optgroup>` : "";
 }).join("");
 const offNote = document.getElementById("offnote");
