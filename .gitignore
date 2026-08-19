@@ -1,0 +1,10 @@
+# Machine-local Claude Code settings (permissions etc.)
+.claude/settings.local.json
+
+# Generated ranking output — reproducible from the scripts
+*_ranking.csv
+*_ranking_minpop*.csv
+
+# Python
+__pycache__/
+*.pyc
