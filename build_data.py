@@ -66,17 +66,17 @@ TIERS = {
 # poorly reported, so neither reliable nor meaningfully shown even with a caveat),
 # and fraud/cybercrime (location assigned too fuzzily to be spatially meaningful).
 OFFENCES = [
-    # High reliability
-    ("diefstal/inbraak woning",            "high",        "Residential burglary"),      # 1.1.1
-    ("diefstal van motorvoertuigen",       "high",        "Motor-vehicle theft"),       # 1.2.2
-    ("diefstal uit/vanaf motorvoertuigen", "high",        "Theft from vehicles"),       # 1.2.1
-    ("diefstal van brom",                  "high",        "Bicycle & moped theft"),     # 1.2.3
-    ("diefstal/inbraak box",               "high",        "Shed/garage burglary"),      # 1.1.2
-    ("diefstal/inbraak bedrijven",         "high",        "Business burglary"),         # 2.5.1
-    # Moderate
-    ("mishandeling",                       "moderate",    "Assault"),                   # 1.4.5
+    # High reliability (~90% reporting, insurance/registration-driven)
+    ("diefstal/inbraak woning",            "high",        "Residential burglary"),      # 1.1.1 ~90% reported
+    ("diefstal van motorvoertuigen",       "high",        "Motor-vehicle theft"),       # 1.2.2 registration+insurance
+    ("diefstal/inbraak box",               "high",        "Shed/garage burglary"),      # 1.1.2 (part of official woninginbraak)
+    ("diefstal/inbraak bedrijven",         "high",        "Business burglary"),         # 2.5.1 insurance-driven
+    # Moderate (usable volume, but a large share goes unreported)
+    ("diefstal van brom",                  "moderate",    "Bicycle & moped theft"),     # 1.2.3 only ~15% reported (~928k stolen vs ~96k registered)
+    ("diefstal uit/vanaf motorvoertuigen", "moderate",    "Theft from vehicles"),       # 1.2.1 contents/parts theft, moderate reporting
+    ("mishandeling",                       "moderate",    "Assault"),                   # 1.4.5 ~50% reported
     ("bedreiging",                         "moderate",    "Threat & intimidation"),     # 1.4.4
-    ("vernieling",                         "moderate",    "Vandalism & property damage"),  # 2.2.1
+    ("vernieling",                         "moderate",    "Vandalism & property damage"),  # 2.2.1 ~18% reported
     # Enforcement-driven
     ("drugshandel",                        "enforcement", "Drug trafficking"),          # 3.1.1
     ("wapenhandel",                        "enforcement", "Weapons trafficking"),       # 3.1.3

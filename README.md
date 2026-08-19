@@ -19,8 +19,8 @@ is explicit in the UI:
 
 | Tier | Offences | Rationale |
 |---|---|---|
-| **High** | dwelling / shed / business burglary, vehicle theft, theft-from-vehicle, bike theft | Insurance/registration-driven: high reporting, low recording bias, stable volume |
-| **Moderate** | assault, threat, vandalism | Genuine victim crime with usable volume, but reporting rates vary |
+| **High** | dwelling / shed / business burglary, motor-vehicle theft | Insurance/registration-driven, ~90% reported (verified against CBS Veiligheidsmonitor): low recording bias, stable volume |
+| **Moderate** | bike & moped theft, theft-from-vehicle, assault, threat, vandalism | Usable volume, but a large share goes unreported (bike theft ~15%, vandalism ~18%, assault ~50%), so levels are less comparable between places |
 | **Enforcement-driven** | drug offences, weapons | Track police activity, not underlying crime — shown as a deliberate contrast |
 | **Registered, incl. attempts — not the homicide rate** | murder & manslaughter | Counts registered offences (~2,500/yr), dominated by *attempts* — roughly **20× actual homicides** (~125 deaths/yr, ~0.7/100k, matching UNODC). Do not read as the homicide rate. Also too sparse for annual municipal comparison. Included only with a strong caveat |
 
