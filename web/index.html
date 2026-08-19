@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dutch municipal crime map</title>
+<script src="d3.v7.min.js"></script>
+<style>
+  :root {
+    --surface-1:#fcfcfb; --plane:#f9f9f7;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+    --gridline:#e1e0d9; --baseline:#c3c2b7;
+    --border:rgba(11,11,11,0.10);
+    --nodata:#e7e6e1;
+    --accent:#2a78d6;
+    /* sequential blue ramp (light->dark) */
+    --seq:#cde2fb,#5598e7,#2a78d6,#184f95,#0d366b;
+    /* diverging blue<->gray<->red */
+    --div:#2a78d6,#f0efec,#e34948;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1:#1a1a19; --plane:#0d0d0d;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+      --gridline:#2c2c2a; --baseline:#383835;
+      --border:rgba(255,255,255,0.10);
+      --nodata:#2c2c2a;
+      --accent:#3987e5;
+      --seq:#16233a,#184f95,#2a78d6,#5598e7,#9ec5f4;
+      --div:#3987e5,#383835,#e66767;
+    }
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body {
+    background:var(--plane); color:var(--text-primary);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:flex; flex-direction:column; height:100vh;
+  }
+  header { padding:14px 20px 10px; }
+  header h1 { margin:0; font-size:18px; font-weight:650; }
+  header p { margin:3px 0 0; font-size:12.5px; color:var(--text-secondary); }
+  .layout { flex:1; display:flex; gap:16px; padding:12px 20px 18px; min-height:0; }
+  .controls {
+    width:260px; flex:none; display:flex; flex-direction:column; gap:16px;
+    overflow-y:auto; padding-right:4px;
+  }
+  .stage { flex:1; position:relative; min-width:0;
+    background:var(--surface-1); border:1px solid var(--border); border-radius:10px; }
+  .field label { display:block; font-size:11px; text-transform:uppercase;
+    letter-spacing:.04em; color:var(--muted); margin-bottom:6px; font-weight:600; }
+  select {
+    width:100%; padding:7px 8px; font-size:13px; border-radius:7px;
+    border:1px solid var(--border); background:var(--surface-1);
+    color:var(--text-primary); font-family:inherit;
+  }
+  .seg { display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
+  .seg button {
+    flex:1; padding:7px 4px; font-size:12px; border:0; cursor:pointer;
+    background:var(--surface-1); color:var(--text-secondary); font-family:inherit;
+  }
+  .seg button[aria-pressed="true"] { background:var(--accent); color:#fff; font-weight:600; }
+  .yearrow { display:flex; gap:8px; align-items:center; }
+  .yearrow span { font-size:12px; color:var(--muted); }
+  .yearrow select { flex:1; }
+  svg { width:100%; height:100%; display:block; }
+  path.muni { stroke:var(--surface-1); stroke-width:.4; cursor:pointer; }
+  path.muni.hi { stroke:var(--text-primary); stroke-width:1.4; }
+  .legend { position:absolute; left:16px; bottom:14px;
+    background:var(--surface-1); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; font-size:11px; color:var(--text-secondary); max-width:280px; }
+  .legend .title { color:var(--text-primary); font-weight:600; font-size:12px; margin-bottom:7px; }
+  .legend canvas { display:block; width:220px; height:11px; border-radius:3px; }
+  .legend .ticks { display:flex; justify-content:space-between; margin-top:3px;
+    font-variant-numeric:tabular-nums; }
+  .tooltip {
+    position:absolute; pointer-events:none; z-index:5; opacity:0;
+    background:var(--text-primary); color:var(--plane);
+    padding:6px 9px; border-radius:6px; font-size:12px; line-height:1.35;
+    transform:translate(-50%,-115%); white-space:nowrap;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .tooltip b { font-size:13px; }
+  .tooltip .v { font-variant-numeric:tabular-nums; }
+  .ranks { margin-top:2px; }
+  .ranks h2 { font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--muted); margin:0 0 6px; font-weight:600; }
+  .ranks ol { margin:0 0 10px; padding:0; list-style:none; font-size:12px; }
+  .ranks li { display:flex; justify-content:space-between; gap:8px; padding:2px 0;
+    border-bottom:1px solid var(--gridline); cursor:pointer; }
+  .ranks li:hover { color:var(--accent); }
+  .ranks li .val { font-variant-numeric:tabular-nums; color:var(--text-secondary); }
+  .note { font-size:11px; color:var(--muted); line-height:1.4; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dutch municipal crime map</h1>
+  <p>Registered offences by municipality — CBS police table 47018NED, population from 70072ned.
+     Reliable, insurance-driven categories. <span id="yearspan"></span></p>
+</header>
+
+<div class="layout">
+  <div class="controls">
+    <div class="field">
+      <label for="offence">Offence</label>
+      <select id="offence"></select>
+    </div>
+    <div class="field">
+      <label>Measure</label>
+      <div class="seg" id="metric">
+        <button data-v="rel" aria-pressed="true">Per 1,000 inh.</button>
+        <button data-v="abs" aria-pressed="false">Absolute</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>View</label>
+      <div class="seg" id="mode">
+        <button data-v="single" aria-pressed="true">Year</button>
+        <button data-v="avg" aria-pressed="false">Average</button>
+        <button data-v="delta" aria-pressed="false">Delta</button>
+      </div>
+    </div>
+    <div class="field" id="yearControls"></div>
+    <div class="ranks">
+      <h2 id="ranktitle">Highest</h2>
+      <ol id="topList"></ol>
+      <h2>Lowest</h2>
+      <ol id="bottomList"></ol>
+    </div>
+    <p class="note">* provisional year (not yet definitive at CBS). Rates use average
+      population. Deltas across municipal reorganisations mix boundary changes with
+      real change — read them with care.</p>
+  </div>
+
+  <div class="stage">
+    <svg id="map"></svg>
+    <div class="legend" id="legend">
+      <div class="title" id="legendTitle"></div>
+      <canvas id="legendCanvas" width="220" height="11"></canvas>
+      <div class="ticks" id="legendTicks"></div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+</div>
+
+<script type="module">
+const state = { offence:null, metric:"rel", mode:"single", y1:null, y2:null };
+
+const [data, geo] = await Promise.all([
+  fetch("data.json").then(r=>r.json()),
+  fetch("nl_gemeenten.geojson").then(r=>r.json()),
+]);
+
+// Treat lon/lat as planar coordinates (geoIdentity) rather than run them
+// through a spherical projection: cartomap's rings are wound the opposite way
+// from what d3's spherical geoPath expects, which makes each polygon render as
+// "the whole map minus a hole". geoIdentity has no such winding rule. Correct
+// the longitude aspect for the Netherlands' latitude (~52.1°N).
+const KX = Math.cos(52.1 * Math.PI / 180);
+(function scaleLon(){
+  const walk = a => { if (typeof a[0] === "number") a[0] *= KX; else a.forEach(walk); };
+  geo.features.forEach(f => walk(f.geometry.coordinates));
+})();
+
+const YEARS = data.years.map(String);
+const PROV = new Set(data.provisional.map(String));
+const NAME = new Map(geo.features.map(f=>[f.properties.statcode, f.properties.statnaam]));
+state.offence = Object.keys(data.offences)[0];
+state.y1 = YEARS[YEARS.length-1];        // latest year
+state.y2 = YEARS[YEARS.length-1];
+document.getElementById("yearspan").textContent = `Data ${YEARS[0]}–${YEARS[YEARS.length-1]}.`;
+
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function isDark(){ return matchMedia("(prefers-color-scheme: dark)").matches; }
+function ramp(varName){ return css(varName).split(",").map(s=>s.trim()); }
+
+// ---- value model -------------------------------------------------------
+function raw(code, year){
+  const c = data.counts[state.offence]?.[code]?.[year];
+  if (c == null) return null;
+  if (state.metric === "abs") return c;
+  const p = data.population[code]?.[year];
+  return p ? c / p * 1000 : null;
+}
+function value(code){
+  if (state.mode === "single") return raw(code, state.y1);
+  if (state.mode === "delta"){
+    const a = raw(code, state.y1), b = raw(code, state.y2);
+    return (a==null || b==null) ? null : b - a;
+  }
+  // average over inclusive range y1..y2
+  let lo = Math.min(+state.y1,+state.y2), hi = Math.max(+state.y1,+state.y2);
+  const vals = [];
+  for (let y=lo; y<=hi; y++){ const v = raw(code, String(y)); if (v!=null) vals.push(v); }
+  return vals.length ? d3.mean(vals) : null;
+}
+const diverging = () => state.mode === "delta";
+const fmt = d3.format(",.0f");
+const fmtR = d3.format(",.2f");
+function fmtVal(v){
+  if (v==null) return "n/a";
+  if (state.metric === "abs") return (v>=0?"":"−") + fmt(Math.abs(Math.round(v)));
+  return (v>=0?"":"−") + fmtR(Math.abs(v));
+}
+
+// ---- projection & paths ------------------------------------------------
+const svg = d3.select("#map");
+const gMap = svg.append("g");
+let projection = d3.geoIdentity().reflectY(true);
+const geoPath = d3.geoPath(projection);
+const tip = document.getElementById("tooltip");
+const stage = document.querySelector(".stage");
+
+const paths = gMap.selectAll("path").data(geo.features).join("path")
+  .attr("class","muni")
+  .on("pointermove", (e,f)=>showTip(e,f))
+  .on("pointerleave", hideTip);
+
+svg.call(d3.zoom().scaleExtent([1,8]).on("zoom", e=>{
+  gMap.attr("transform", e.transform);
+  paths.attr("stroke-width", 0.4/e.transform.k);
+}));
+
+function resize(){
+  const r = stage.getBoundingClientRect();
+  svg.attr("viewBox", `0 0 ${r.width} ${r.height}`);
+  projection.fitSize([r.width, r.height], geo);
+  paths.attr("d", geoPath);
+}
+new ResizeObserver(resize).observe(stage);
+
+function showTip(e,f){
+  const code = f.properties.statcode, v = value(code);
+  paths.classed("hi", d=>d===f);
+  const raw1 = data.counts[state.offence]?.[code]?.[state.y1];
+  tip.style.opacity = 1;
+  tip.style.left = e.offsetX + "px";
+  tip.style.top = e.offsetY + "px";
+  tip.innerHTML = `<b>${f.properties.statnaam}</b><br>`
+    + `<span class="v">${fmtVal(v)} ${unitShort()}</span>`;
+}
+function hideTip(){ tip.style.opacity = 0; paths.classed("hi", false); }
+
+// ---- color scale -------------------------------------------------------
+let color;
+function buildScale(){
+  const vals = geo.features.map(f=>value(f.properties.statcode)).filter(v=>v!=null);
+  if (diverging()){
+    const m = d3.quantile(vals.map(Math.abs).sort(d3.ascending), 0.98) || 1;
+    color = d3.scaleDiverging(d3.piecewise(d3.interpolateRgb, ramp("--div")))
+              .domain([-m, 0, m]).clamp(true);
+    color._lo = -m; color._hi = m;
+  } else {
+    const hi = d3.quantile(vals.slice().sort(d3.ascending), 0.98) || 1;
+    color = d3.scaleSequential(d3.piecewise(d3.interpolateRgb, ramp("--seq")))
+              .domain([0, hi]).clamp(true);
+    color._lo = 0; color._hi = hi;
+  }
+}
+
+// ---- units / labels ----------------------------------------------------
+function unitShort(){ return state.metric === "abs" ? "" : "per 1k"; }
+function legendLabel(){
+  const off = data.offences[state.offence];
+  const meas = state.metric === "abs" ? "count" : "per 1,000 inhabitants";
+  if (state.mode === "delta") return `Δ ${off} — ${meas}, ${state.y1}→${state.y2}`;
+  if (state.mode === "avg")   return `${off} — ${meas}, mean ${Math.min(+state.y1,+state.y2)}–${Math.max(+state.y1,+state.y2)}`;
+  return `${off} — ${meas}, ${state.y1}`;
+}
+
+// ---- legend ------------------------------------------------------------
+function drawLegend(){
+  document.getElementById("legendTitle").textContent = legendLabel();
+  const cv = document.getElementById("legendCanvas");
+  const ctx = cv.getContext("2d");
+  for (let x=0; x<cv.width; x++){
+    const t = x/(cv.width-1);
+    ctx.fillStyle = color(color._lo + t*(color._hi-color._lo));
+    ctx.fillRect(x,0,1,cv.height);
+  }
+  const ticks = document.getElementById("legendTicks");
+  const f = state.metric==="abs" ? d3.format(",.0f") : d3.format(",.1f");
+  if (diverging())
+    ticks.innerHTML = [color._lo,0,color._hi].map(v=>`<span>${v>0?"+":""}${f(v)}</span>`).join("");
+  else
+    ticks.innerHTML = [0, color._hi].map(v=>`<span>${f(v)}</span>`).join("");
+}
+
+// ---- ranking lists -----------------------------------------------------
+function drawRanks(){
+  const rows = geo.features.map(f=>({code:f.properties.statcode,
+      name:f.properties.statnaam, v:value(f.properties.statcode)}))
+    .filter(d=>d.v!=null).sort((a,b)=>b.v-a.v);
+  document.getElementById("ranktitle").textContent = diverging() ? "Largest increase" : "Highest";
+  const render = (el, arr)=> el.innerHTML = arr.map(d=>
+    `<li data-code="${d.code}"><span>${d.name}</span><span class="val">${fmtVal(d.v)}</span></li>`).join("");
+  render(document.getElementById("topList"), rows.slice(0,10));
+  render(document.getElementById("bottomList"), rows.slice(-10).reverse());
+  document.querySelectorAll(".ranks li").forEach(li=>{
+    li.onmouseenter = ()=> paths.classed("hi", d=>d.properties.statcode===li.dataset.code);
+    li.onmouseleave = ()=> paths.classed("hi", false);
+  });
+}
+
+// ---- main update -------------------------------------------------------
+function update(){
+  buildScale();
+  paths.attr("fill", f=>{ const v=value(f.properties.statcode); return v==null?"var(--nodata)":color(v); });
+  drawLegend(); drawRanks();
+}
+
+// ---- controls ----------------------------------------------------------
+const offSel = document.getElementById("offence");
+offSel.innerHTML = Object.entries(data.offences)
+  .map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+offSel.onchange = ()=>{ state.offence = offSel.value; update(); };
+
+function seg(id, key, after){
+  document.querySelectorAll(`#${id} button`).forEach(b=>{
+    b.onclick = ()=>{
+      state[key] = b.dataset.v;
+      document.querySelectorAll(`#${id} button`).forEach(x=>x.setAttribute("aria-pressed", x===b));
+      if (after) after();
+      update();
+    };
+  });
+}
+seg("metric","metric");
+seg("mode","mode", renderYearControls);
+
+function yearOptions(sel){
+  return YEARS.map(y=>`<option value="${y}" ${y===sel?"selected":""}>${y}${PROV.has(y)?" *":""}</option>`).join("");
+}
+function renderYearControls(){
+  const box = document.getElementById("yearControls");
+  if (state.mode === "single"){
+    box.innerHTML = `<label>Year</label><select id="ya">${yearOptions(state.y1)}</select>`;
+    document.getElementById("ya").onchange = e=>{ state.y1=e.target.value; update(); };
+  } else {
+    const [la,lb] = state.mode==="delta" ? ["From","To"] : ["From","To"];
+    if (state.mode==="delta" && state.y1===state.y2){ state.y1 = YEARS[0]; }
+    box.innerHTML = `<label>${state.mode==="delta"?"Compare years":"Average range"}</label>
+      <div class="yearrow"><select id="ya">${yearOptions(state.y1)}</select>
+      <span>${state.mode==="delta"?"→":"–"}</span>
+      <select id="yb">${yearOptions(state.y2)}</select></div>`;
+    document.getElementById("ya").onchange = e=>{ state.y1=e.target.value; update(); };
+    document.getElementById("yb").onchange = e=>{ state.y2=e.target.value; update(); };
+  }
+}
+
+renderYearControls();
+resize();
+update();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", update);
+</script>
+</body>
+</html>
