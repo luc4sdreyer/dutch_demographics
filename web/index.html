@@ -92,13 +92,14 @@
   .ranks li:hover { color:var(--accent); }
   .ranks li .val { font-variant-numeric:tabular-nums; color:var(--text-secondary); }
   .note { font-size:11px; color:var(--muted); line-height:1.4; }
+  .offnote { font-size:11px; color:var(--text-secondary); line-height:1.4; margin:7px 0 0; }
 </style>
 </head>
 <body>
 <header>
   <h1>Dutch municipal crime map</h1>
   <p>Registered offences by municipality — CBS police table 47018NED, population from 70072ned.
-     Reliable, insurance-driven categories. <span id="yearspan"></span></p>
+     Offences grouped by how reliably they compare across municipalities. <span id="yearspan"></span></p>
 </header>
 
 <div class="layout">
@@ -106,6 +107,7 @@
     <div class="field">
       <label for="offence">Offence</label>
       <select id="offence"></select>
+      <p class="offnote" id="offnote"></p>
     </div>
     <div class="field">
       <label>Measure</label>
@@ -167,7 +169,8 @@ const KX = Math.cos(52.1 * Math.PI / 180);
 const YEARS = data.years.map(String);
 const PROV = new Set(data.provisional.map(String));
 const NAME = new Map(geo.features.map(f=>[f.properties.statcode, f.properties.statnaam]));
-state.offence = Object.keys(data.offences)[0];
+const OFF = new Map(data.offences.map(o=>[o.code, o]));   // code -> {code,label,tier}
+state.offence = data.offences[0].code;
 state.y1 = YEARS[YEARS.length-1];        // latest year
 state.y2 = YEARS[YEARS.length-1];
 document.getElementById("yearspan").textContent = `Data ${YEARS[0]}–${YEARS[YEARS.length-1]}.`;
@@ -263,7 +266,7 @@ function buildScale(){
 // ---- units / labels ----------------------------------------------------
 function unitShort(){ return state.metric === "abs" ? "" : "per 1k"; }
 function legendLabel(){
-  const off = data.offences[state.offence];
+  const off = OFF.get(state.offence).label;
   const meas = state.metric === "abs" ? "count" : "per 1,000 inhabitants";
   if (state.mode === "delta") return `Δ ${off} — ${meas}, ${state.y1}→${state.y2}`;
   if (state.mode === "avg")   return `${off} — ${meas}, mean ${Math.min(+state.y1,+state.y2)}–${Math.max(+state.y1,+state.y2)}`;
@@ -313,9 +316,15 @@ function update(){
 
 // ---- controls ----------------------------------------------------------
 const offSel = document.getElementById("offence");
-offSel.innerHTML = Object.entries(data.offences)
-  .map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
-offSel.onchange = ()=>{ state.offence = offSel.value; update(); };
+offSel.innerHTML = Object.entries(data.tiers).map(([key,t])=>{
+  const opts = data.offences.filter(o=>o.tier===key)
+    .map(o=>`<option value="${o.code}">${o.label}</option>`).join("");
+  return opts ? `<optgroup label="${t.name}">${opts}</optgroup>` : "";
+}).join("");
+const offNote = document.getElementById("offnote");
+function updateOffNote(){ offNote.textContent = data.tiers[OFF.get(state.offence).tier].note; }
+offSel.onchange = ()=>{ state.offence = offSel.value; updateOffNote(); update(); };
+updateOffNote();
 
 function seg(id, key, after){
   document.querySelectorAll(`#${id} button`).forEach(b=>{

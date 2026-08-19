@@ -13,11 +13,20 @@ is high enough to be stable:
 
 - **Primary:** residential burglary — *Diefstal/inbraak woning* (`1.1.1`)
 - **Secondary:** motor-vehicle theft — *Diefstal van motorvoertuigen* (`1.2.2`)
-- Plus three related theft categories as cross-checks.
 
-Police-initiated categories (drugs, weapons, public order) are deliberately
-**excluded** as headline measures — they track enforcement intensity, not
-underlying crime.
+Offences are grouped by a **reliability tier** so the measure's trustworthiness
+is explicit in the UI:
+
+| Tier | Offences | Rationale |
+|---|---|---|
+| **High** | dwelling / shed / business burglary, vehicle theft, theft-from-vehicle, bike theft | Insurance/registration-driven: high reporting, low recording bias, stable volume |
+| **Moderate** | assault, threat, vandalism | Genuine victim crime with usable volume, but reporting rates vary |
+| **Enforcement-driven** | drug offences, weapons | Track police activity, not underlying crime — shown as a deliberate contrast |
+
+**Deliberately excluded:** homicide, street robbery, robbery and sexual offences
+(too rare — a municipality-year is dominated by noise; homicide is ~2,500/year
+nationally across 342 municipalities), and fraud/cybercrime (location assigned
+too fuzzily to be spatially meaningful).
 
 ## Data sources (CBS OData)
 
