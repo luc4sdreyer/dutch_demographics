@@ -21,7 +21,7 @@ whose finest theft class is "Diefstal en inbraak zonder geweld" -- it has NO
 dwelling-burglary breakdown, so it cannot serve this project.
 
 Counts in 47018NED are absolute only (no built-in rate), so we normalize to a
-per-1,000-inhabitants rate using average population (GemiddeldAantalInwoners)
+per-100,000-inhabitants rate using average population (GemiddeldAantalInwoners)
 from CBS regional core-figures table 70072ned.
 
 Codes are discovered by name-matching, never hardcoded, so the script is
@@ -144,20 +144,20 @@ def main():
 
     print(f"Municipality: {gm_name} ({gm_key.strip()})")
     print(f"Source: CBS 47018NED (police, detailed offences), "
-          f"rate per 1,000 inhabitants via 70072ned")
+          f"rate per 100,000 inhabitants via 70072ned")
     print(f"Years: {years[0]}-{years[-1]}  (* = provisional)\n")
 
     for label, (soort_key, soort_title) in offences.items():
         counts = crime_by_year(gm_key, soort_key, periods)
         print(f"{label}  [{soort_title}]")
-        print(f"  {'year':<6}{'count':>8}{'per 1,000 inh.':>16}")
+        print(f"  {'year':<6}{'count':>8}{'per 100,000 inh.':>18}")
         for y in years:
             n = counts.get(y)
             p = pop.get(y)
-            rate = f"{n / p * 1000:.2f}" if (n is not None and p) else "n/a"
+            rate = f"{n / p * 1e5:.1f}" if (n is not None and p) else "n/a"
             star = "*" if y in PROVISIONAL else ""
             n_str = "n/a" if n is None else str(n)
-            print(f"  {y + star:<6}{n_str:>8}{rate:>16}")
+            print(f"  {y + star:<6}{n_str:>8}{rate:>18}")
         print()
 
 

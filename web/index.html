@@ -112,7 +112,7 @@
     <div class="field">
       <label>Measure</label>
       <div class="seg" id="metric">
-        <button data-v="rel" aria-pressed="true">Per 1,000 inh.</button>
+        <button data-v="rel" aria-pressed="true">Per 100k inh.</button>
         <button data-v="abs" aria-pressed="false">Absolute</button>
       </div>
     </div>
@@ -185,7 +185,7 @@ function raw(code, year){
   if (c == null) return null;
   if (state.metric === "abs") return c;
   const p = data.population[code]?.[year];
-  return p ? c / p * 1000 : null;
+  return p ? c / p * 1e5 : null;
 }
 function value(code){
   if (state.mode === "single") return raw(code, state.y1);
@@ -201,7 +201,7 @@ function value(code){
 }
 const diverging = () => state.mode === "delta";
 const fmt = d3.format(",.0f");
-const fmtR = d3.format(",.2f");
+const fmtR = d3.format(",.1f");
 function fmtVal(v){
   if (v==null) return "n/a";
   if (state.metric === "abs") return (v>=0?"":"−") + fmt(Math.abs(Math.round(v)));
@@ -264,10 +264,10 @@ function buildScale(){
 }
 
 // ---- units / labels ----------------------------------------------------
-function unitShort(){ return state.metric === "abs" ? "" : "per 1k"; }
+function unitShort(){ return state.metric === "abs" ? "" : "per 100k"; }
 function legendLabel(){
   const off = OFF.get(state.offence).label;
-  const meas = state.metric === "abs" ? "count" : "per 1,000 inhabitants";
+  const meas = state.metric === "abs" ? "count" : "per 100,000 inhabitants";
   if (state.mode === "delta") return `Δ ${off} — ${meas}, ${state.y1}→${state.y2}`;
   if (state.mode === "avg")   return `${off} — ${meas}, mean ${Math.min(+state.y1,+state.y2)}–${Math.max(+state.y1,+state.y2)}`;
   return `${off} — ${meas}, ${state.y1}`;

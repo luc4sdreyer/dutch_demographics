@@ -2,10 +2,10 @@
 """National municipality ranking on a reliable crime measure.
 
 Ranks all Dutch municipalities by residential burglary (default) or another
-insurance-driven offence, as a rate per 1,000 inhabitants, averaged over the
+insurance-driven offence, as a rate per 100,000 inhabitants, averaged over the
 most recent DEFINITIVE 3 years to suppress provisional-year noise.
 
-Rate = (mean absolute count over window) / (mean population over window) * 1000.
+Rate = (mean absolute count over window) / (mean population over window) * 100000.
 
 Sources (see cbs_burglary.py for the full rationale):
   47018NED @ dataderden.cbs.nl  -- police detailed offences, municipal, absolute
@@ -131,9 +131,9 @@ def main():
         rows.append({
             "gm": gm, "municipality": name,
             "mean_count": round(c, 1), "mean_pop": round(p),
-            "rate_per_1000": round(c / p * 1000, 3),
+            "rate_per_100k": round(c / p * 1e5, 1),
         })
-    rows.sort(key=lambda r: r["rate_per_1000"], reverse=True)
+    rows.sort(key=lambda r: r["rate_per_100k"], reverse=True)
     for i, r in enumerate(rows, 1):
         r["rank"] = i
 
@@ -142,12 +142,12 @@ def main():
     fn = f"{slug}_ranking{suffix}.csv"
     with open(fn, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["rank", "gm", "municipality",
-                                          "mean_count", "mean_pop", "rate_per_1000"])
+                                          "mean_count", "mean_pop", "rate_per_100k"])
         w.writeheader()
         w.writerows(rows)
 
     print(f"Offence: {soort_title}  ({soort_key.strip()})")
-    print(f"Measure: rate per 1,000 inhabitants, mean of {years[0]}-{years[-1]} "
+    print(f"Measure: rate per 100,000 inhabitants, mean of {years[0]}-{years[-1]} "
           f"(definitive years)")
     floor_note = (f"; excluded {excluded} below {args.min_pop:,} inhabitants"
                   if args.min_pop else "")
@@ -155,10 +155,10 @@ def main():
 
     def show(title, sub):
         print(title)
-        print(f"  {'#':>3}  {'municipality':<24}{'rate/1000':>10}{'mean/yr':>9}")
+        print(f"  {'#':>3}  {'municipality':<24}{'rate/100k':>10}{'mean/yr':>9}")
         for r in sub:
             print(f"  {r['rank']:>3}  {r['municipality']:<24}"
-                  f"{r['rate_per_1000']:>10.2f}{r['mean_count']:>9.0f}")
+                  f"{r['rate_per_100k']:>10.1f}{r['mean_count']:>9.0f}")
         print()
 
     show(f"TOP 15 (highest burglary rate):", rows[:15])

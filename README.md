@@ -65,7 +65,7 @@ from `web/data.json`. Filters:
 1. **Year** — pick a single year
 2. **Average** — mean over a year range
 3. **Delta** — change between two years (diverging colour scale)
-4. **Measure** — absolute count vs. per 1,000 inhabitants
+4. **Measure** — absolute count vs. per 100,000 inhabitants
 
 Run locally (a server is required — the page uses `fetch`):
 
